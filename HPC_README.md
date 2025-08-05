@@ -4,7 +4,7 @@ I'm summarizing some notes from [here] (https://github.com/alexandergagliano/sum
 ## Login
 ### SSH
 ```
-ssh -Y cmiyamot@bridges2.psc.edu
+ssh -Y <USER_NAME>@bridges2.psc.edu
 ```
 
 ### OnDemand (GUI)
