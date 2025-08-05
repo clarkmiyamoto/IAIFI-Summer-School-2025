@@ -1,5 +1,7 @@
 # How to use Harvard HPC
-I'm summarizing some notes from [here] (https://github.com/alexandergagliano/summer-school-2024/tree/main/computing)
+I'm summarizing some notes from [here](https://github.com/alexandergagliano/summer-school-2024/tree/main/computing)
+
+There is an official HPC guide [here](https://www.psc.edu/resources/bridges-2/user-guide/)
 
 ## Login
 ### SSH
@@ -31,12 +33,20 @@ You can also `pip install` into your base environment
 PSC has a couple ways to do package management. Singularity (eww) and conda. 
 
 Here I'll go over Conda. The TLDR is that is acts like normal conda 🎉.
+
+First load conda.
 ```
-conda env -n <ENV_NAME> python=3.11
+interact # Start interactive session
+module load anaconda3 # Load anaconda
+```
+Now you can create an environment.
+```
+conda create --name <ENV_NAME> python=3.11
 conda activate <ENV_NAME>
 ```
 Now you can pip install
 ```
+python -m pip install ipykernel
 python -m pip install <PACKAGE_NAME> --user
 ```
 

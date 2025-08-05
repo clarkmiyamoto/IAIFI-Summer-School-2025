@@ -8,8 +8,15 @@ Perhaps to bring ML closer to Physics, we can use \textbf{inductive biases}. Thi
 	\item Software constraints (loss function design): Soft impose conservation laws by adding penalties in loss function.
 	\item Implicit bias (data augmentation): Construct training examples s.t. model learns specific features of the problem.
 \end{itemize}
-\subsection{Graph Structured Data}
-Consider a data which is encoded into a graph structure (i.e. 2D lattice)
+\subsection{Geometric Deep Learning}
+Grosso talks about GNNs, MLPs, CNNs. And talks about how data might naturally be structured for these. TLDR, it's equivariance.
+
+\subsubsection{Recurrent NNs}
+Consider a time-series $x = (x_1,..., x_T)$, where $x_t \in \mathbb R^d$. You have a hidden state $h_t \in \mathbb R^k$. You have a model
+\begin{align}
+	h_t = \sigma(\underbrace{W_{x h} x_t}_{\text{Coupling to data at time $t$}} + \underbrace{W_{hh} h_{t-1}}_{\text{Coupling to previous hidden state}} + \underbrace{b_h}_{\text{Bias}})
+\end{align}
+This model has time-translation equivariance. So it has a strong inductive bias towards sequential correlation.
 
 
 
