@@ -1,0 +1,36 @@
+\section{Martin: Learning to Choose Optimizers}
+Consider a function $f(x)$, and you want to find the global minima $x_*$. You have a bunch of optimizers to choose from, so you can switch them out half way through the optimization process. Speaker uses RL to choose when to switch out.
+
+\section{Robert Jankowski: Task complexity shapes internal representations / robustness in NN}
+We ask the question, "how robust is the NN (i.e. it keeps performance after I mess with the weights)"? And to make this more interesting, does this change w/ complexity of task. They measure complexity using MNIST with random labels (where $q$ percent of labels are randomized).\\
+\\
+They try a set of probes for messing with the neural network: pruning, binarization, noise injections, etc. They find that neural networks trained on complex tasks, they fail much quicker w/ pruning, than NN trained on easier tasks.
+
+\section{Satsuki Nishimura: Theoretical applications of RL for Particle Physics}
+Consider a Yukawa Lagrangian. You can ask the RL agent to determine the normal ordering of fields (what???), they show it's 10x faster than traditional methods (I assume mathematica).
+
+\section{Pranish Ghimire: Small Vision Language Models on Mechanics Problem Solving}
+Mechanics problem solving are common-sense / intuition problems which rely on diagrams-- lots of LLMs are tested in quantitative problems (i.e. traditional math), but what about common-sense visual questions? They test these models using the Bennet Mechanical Comprehension Test (MCT). They find it isn't good at visual reasoning.
+
+\section{Ved Shah: Real-Time Classifier for LLST}
+Dataset is light curves \& 23 contextual features. In measurement, after measure light curves for a little, you need to determine if you'll do a fancier measurement follow-up, or move on. So perhaps can we use ML to determine this.\\
+\\
+The pipeline is super engineered (but probably more robust!), he makes a decision tree, where each point is a classifier.\\
+\\
+Model is open-source / open-weight on \url{https://www.github.com/uiucsn/Astro-ORACLE}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
