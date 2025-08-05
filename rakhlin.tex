@@ -1,0 +1,134 @@
+This lecture is based off the course notes at \url{https://arxiv.org/abs/2312.16730}.
+
+\section{Overview}
+At each time $t$. The user gets some context $x_t$, makes a decision $\pi_t$. Through this decision, you get some reward $r_t$, and make an observation $o_t$. This is the high-level problem setup.
+
+\subsection{Unstructured Multi-Armed Bandits (MAB)}
+Consider a decision space $\Pi = [1, ..., \mathcal A]$,
+For $t \in [1,..., T]$, the decision maker selects $\pi_t \sim p_t \in \Delta(\Pi)$ (a probability distribution over the decision space), and then observed reward $r_t = f^*(\pi_t) + \epsilon_t$.
+
+We assume that $f^* : \Delta(\pi) \to  [0,1]^{\mathcal A}$ (is some bounded mean reward), and $\epsilon_t$ is (sub) Gaussian. Our objective function is regret
+\begin{align}
+	\text{Reg}_{\text{DM}} = \sum_{t=1}^T \mathbb E_{\pi_t} [f^*(\pi^*) - f^*(\pi_t)]
+\end{align}
+The question becomes, how can we make a choice for $\pi_t$ s.t. we grow the regret function sub-linearly in $T$. (If regret grows linearly in $T$, you're not learning!)
+\begin{sidework}
+\textbf{Greedy Choices Fail:}\\
+Consider making an estimate for $f^*$ (denoted by $\hat f_t(\pi)$)
+\begin{align}
+	\hat f_t(\pi) = \frac{1}{|\tau_t(\pi)|} \sum_{s \in \tau_t(\pi)} r_s
+\end{align}
+where $\tau_t(\pi)=$ time steps prior to $t$ when $\pi$ was chosen. \\The greedy choice is
+\begin{align}
+	\pi_t = \text{argmax}_{\pi \in \Pi} \hat f_t(\pi)
+\end{align}
+This obviously fails, i.e. think of eating a restaurant once, and never revisiting it.
+\end{sidework}
+\begin{sidework}
+	\textbf{Upper-Confidence-Bound (UCB):}\\
+	At time $t$ choose the arm w/ largest $\text{ucb}_t(\pi)$
+	\begin{align}
+		\text{ucb}_t(\pi) = \hat f_t (\pi) + \underbrace{\sqrt{\frac{2\log \delta^{-1}}{|\tau_t(\pi)|}}}_{\text{Due to tails of } \epsilon}
+	\end{align}
+	and $\hat f_t(\pi) = \frac{1}{|\tau_t(\pi)} \sum_{s \in \tau_t(\pi)} r_s$, $\tau_t(\pi) = $ timesteps prior to $t$ when $\pi$ was chosen, $1-\delta$ is the confidence interval.\\
+	\\
+	What's nice is that the confidence interval bounds the error of your estimate of reward.\\
+	\\
+	You can show that 
+	\begin{align}
+		\text{Reg}_{\text{DM}} = \mathcal O(\sqrt{\mathcal A T \log (1/\delta)}
+	\end{align}
+\end{sidework}
+These have been deterministic solutions, but what if you can use stochastic / randomized solutions?
+\begin{sidework}
+	\textbf{SquareCB Algorithm:}\\
+	On each round $t \in [1, ..., T]$. Estimate $\hat f_t$ via regression w.r.t. data $\{(\pi_i, r_i)\}_{i=1}^{t-1}$. Compute the Inverse Gap weighting (IGW) distribution
+	\begin{align}
+		p_t(\pi) = \frac{1}{\lambda + \gamma (\hat f_t(\hat \pi) - \hat f_t(\pi)}
+	\end{align}
+	with $\lambda$ s.t. $\sum_\pi p_t(\pi) = 1$. Sample a decision $\pi_t \sim p$ and observe reward $r_t$. $\gamma$ is your temperature.\\
+	\\
+	You get a nearly optimal regret
+	\begin{align}
+		\text{Reg}_{\text{DM}} = \mathcal O(\mathcal A \sqrt{T})
+	\end{align}
+	You can also show that that when you sample your action dependent on IGW, risk is upper bounded by
+	\begin{align}
+		\text{Risk} \leq \frac{\mathcal A}{\gamma} + \gamma ~\mathbb E_{\pi \sim p} [(\hat f(\pi) - f^*(\pi))^2]
+	\end{align}
+\end{sidework}
+
+\subsection{Structured Bandits}
+Now consider where there are no contexts $x_t$ and observations $o_t$. This means for $t \in [1,...,T]$: the decision-maker selects $\pi_t \sim p_t \in \Delta(\Pi)$ (where $\Pi$ is possibly infinite now) and observes reward $r_t = f^*(\pi_t) + \epsilon$. \\
+\\
+We assume that a known model class $\mathcal F$ s.t. $f^* \in \mathcal F$ (the true mean reward is inside a function class, typically defined by a neural network), $\epsilon_t$ is (sub) Gaussian.\\
+\\
+Our objectives are regret, or risk.\\
+\\
+Recall in the MAB setting, we estimated rewards for each arm $\pi \in \Pi$. We now have a possibly infinite set $\Pi$, so what is the analogue of mean estimate if we know the true model is in $\mathcal F$? This is regression (best fit within $\mathcal F$ to past data $\{(\pi_i, r_i)\}_{i=1}^{t-1}$
+\begin{align}
+	\text{argmin}_{f\in \mathcal F} \sum_{s < t} (f(\pi_s) - r_s)^2
+\end{align}
+\begin{sidework}
+	Define a confidence set $\mathcal F_t \subseteq \mathcal F$. Define upper and lower confidence functions s.t.
+	\begin{align}
+		\text{lcb}_t(\pi) = \min_{f \in \mathcal F_t} f(\pi)\\
+		\text{ucb}_t(\pi) = \max_{f \in \mathcal F_t}f(\pi)
+	\end{align}
+	If you make the optimistic choice $\pi_t = \text{argmax
+}_{\pi \in \Pi} \text{ucb}_t(\pi)$,	you can show that regret is upper bounded by
+	\begin{align}
+		\text{Reg}_{\text{DM}}\leq \sum_{t=1}^T (\text{ucb}_t(\pi) - \text{lcb}_t(\pi))
+	\end{align}
+\end{sidework}
+
+\section{Contextual Bandits}
+Consider the problem for $t = \in[1,...,T]$. The decision maker observes $x_t \in \mathcal X$, the decision maker selects $\pi_t \sim p_T \in \Delta(\Pi)$, and observes reward $r_t  = f^*(x_t, \pi_t) + \epsilon_t$.\\
+\\
+We assume a known model class $\mathcal F$, s.t. $f^* \in \mathcal F$. \\
+\\
+The objective is either regret and risk.
+\begin{align}
+	\text{Reg} = \sum_t \mathbb E_{\pi_t} [f^*(x_t, \pi^*) - f^*(x_t, \pi_t)]
+\end{align}
+\begin{sidework}
+	\textbf{SquareCB Algorithm:} You can get the previous SquareCB Algorithm, and lift $f(\pi) \mapsto f(x,\pi)$. Plug and chug.
+\end{sidework}
+\begin{sidework}
+	\textbf{LinearUCB:} There's also an extension of the linear UCB algorithm.
+\end{sidework}
+
+\subsection{Episodic RL}
+Consider a state space $\mathcal S$, and action space $\mathcal A$. You have a probability transition kernel $P_h^M : \mathcal S \times \mathcal A\to \Delta(S)$, and a reward distribution $P_h^M: \mathcal S \times \mathcal A \to \Delta(\mathbb R)$, and initalize your state according to distribution $d_1 \in \Delta(S)$. You have dynamics for episode $t \in [1,...,T]$: for $h \in [1,..,H]$, you take action $a_h \sim \pi_h(\cdot | s_h)$ according to policy $\pi$, this yields a reward $r_h \sim \mathcal R_h^M(\cdot | s_h, a_h)$, and finally you observe a new state (due to your action) $s_{h+1} \sim P_h^M(\cdot | s_h , a_h)$.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
