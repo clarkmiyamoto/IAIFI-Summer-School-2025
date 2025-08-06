@@ -9,7 +9,7 @@ Perhaps to bring ML closer to Physics, we can use \textbf{inductive biases}. Thi
 	\item Implicit bias (data augmentation): Construct training examples s.t. model learns specific features of the problem.
 \end{itemize}
 \subsection{Geometric Deep Learning}
-Grosso talks about GNNs, MLPs, CNNs. And talks about how data might naturally be structured for these. TLDR, it's equivariance.
+Grosso talks about MLPs, CNNs, RNNs, GNNs in the language of inductive biases. The equivariance (or lack-there-of) for different models provide different biases of solutions, hence they should be used for different tasks. I already knew about this stuff, so I took minimal notes.
 
 \subsubsection{Recurrent NNs}
 Consider a time-series $x = (x_1,..., x_T)$, where $x_t \in \mathbb R^d$. You have a hidden state $h_t \in \mathbb R^k$. You have a model
@@ -18,6 +18,56 @@ Consider a time-series $x = (x_1,..., x_T)$, where $x_t \in \mathbb R^d$. You ha
 \end{align}
 This model has time-translation equivariance. So it has a strong inductive bias towards sequential correlation.
 
+\subsection{Activation Functions}
+Acitvations strongly influence what the networks performs in-terms of frequency content. You can show that the "spectral bias of shallow NNs are shaped by activation function".
+
+\subsection{Data Augmentation}
+\subsubsection{Contrastive Leanring}
+The key idea is to organize the data in an embedded space s.t. similar examples are clustered together, while different examples are pushed apart. For example we have the SimCLR loss
+\begin{align}
+	\ell_{\text{SimCLR}}(x_i, x_j) = - \log \frac{e^{sim(\phi_\theta(x_i), \phi_\theta(x_j) )/ \tau}}{Z}, ~~ \text{s.t. } \text{sim}(x,y) = x^T y / ||x||||y|| 
+\end{align}
+$Z$ is chosen s.t. $\int e^{sim(\phi_\theta(x_i), \phi_\theta(x_j) )/ \tau} dx = 1$
 
 
 \section{Physics Inspired ML}
+
+\subsection{Energy-Based-Models (EBMs)}
+The premise is you capture the dependencies between observed $X$ and unobserved variables $Y$ by associated a scalar function $E_\theta$ (denoted by the \textbf{energy}) which is a measure of "compatability" between the two.\\
+\\
+For consistency, we'll say low energies correspond to configurations of variables with high consistency. For example, we can make predictions on $Y$, by initializing $Y \sim \mathcal N(0,1)$, and then using an optimization algorithm. We train this by using contrastive learning, i.e. positive examples push the energy down, and negative example pull energy up. We also add the "right" regularization s.t. the energy function stays locally convex (i.e. we want it to be easy to argmin it).\\
+\\
+So this framework seems to be quite general, how can we use it?
+\begin{itemize}
+	\item Inference: Perform
+	\begin{align}
+		Y^* = \text{argmin}_y E(y,x)
+	\end{align}
+	\item Ranking: 
+	\item Detection: the energy of the system for a given data point $X$ under the hypothesis is compared to a threshold
+\end{itemize}
+We can also convert these to probabilities by asserting the Energy function to be exact to the Hamiltonian in a Boltzmann Distribution
+\begin{align}
+	P(Y|X) = \frac{e^{-\beta E(Y,X)}}{\int dy ~ e^{-\beta E(y,X)}}
+\end{align}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
