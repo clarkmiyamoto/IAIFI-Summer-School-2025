@@ -1,0 +1,67 @@
+What is computational neural science? There are two complementary definitions: 1) use computational tools to investigate brain functions, 2) seek to understand the nature/principles of "computation" in neural systems.
+
+\begin{definition}
+	[Universal Approximation Theorem] Any function $f(x)$ with domain on $\mathbb R^d$, with some smoothness conditions, can be approximated by a neural network with $f_n(x)$ with $n$ neurons
+	\begin{align}
+		\int_{B_r} (f(x) - f_n(x))^2 \mu(dx) \leq c/ n
+	\end{align}
+	where $\mu$ is the measure on a ball $B_r \equiv \{x: |x| < r\}$
+\end{definition}
+Interestingly, no linear combination of $n$ fixed basis functions yield integrated square errors smaller than $(1/n)^{2d}$. So feature learning seems to be much more powerful than just basis expansions.
+
+\section{Theories of Learning}
+In mathematics / computer-science, there's a focus on proofs / worst-case performance. Problems are in the flavor of statistical learning / generalization bounds. While in physics / theoretical neuroscience, we don't make huge general claims, but instead make assumptions about data distributions / work with toy-models. We do student-teaching networks and mean field theory. Chung works in the style of the latter.
+
+Consider a human which is looking at an image $x \in \mathcal X$. In neuroscience, we can encode this image as a vector $\mathbf r = (r_1, ..., r_N) \in \mathcal R$, where $r_i$ is the number of spikes neuron $i$ gives off in a certain time window. If you vary the  input $x$ under some group action $g \in G$, you'll find that $r$ varies in a manifold-like way (it's not an exact mathematical manifold, but rather we mean it in the sense there's some low-dimensional structure there).
+
+Now, consider showing a different image, $x' \in \mathcal X$, and varying it under the same group action, and ecode this into $r' \in \mathcal R$. You'll find in $\mathcal R$, there will be some hyper-plane which separates the two manifolds defined by $r, r'$.
+
+Chung then raises the questions, given the shape of manifolds, how many can you classify linearly? 
+\begin{definition}
+	[Manifold Capacity] How many neural manifolds (categories) can you pack into the neural activity space, while they're still linearly separable?
+\end{definition}
+\subsection{Neural Manifolds}
+We model a neural manifold as a point cloud 
+\begin{align}
+	x^\mu = x_0^\mu + s_i \mathbf u_i^\mu
+\end{align}
+where $x_0^\mu \in \mathbb R^N$ is the center of mass, and $\mathbf u_i^\mu$ is the basis of the manifold. Note that my notation change, the $x^\mu$ here is the $r$ in the previous section.
+
+We can ask what's the critical capacity of the neural network, which is how many manifolds can I add until the volume of valid weight vectors shrinks to zero.
+\begin{align}
+	Z = \int d^N \vec w \delta( |\vec w|^2 - N) \prod_{\mu=1}^P \Theta(h_{closest}^\mu - \kappa)
+\end{align}
+where $h_{closest}^\mu$ is the distance from the classification plane and the $\mu$'th manifold in $\mathcal R$, $\kappa$ is the minimum separation length margin, $\vec w$ is the parameter. 
+
+We can then ask about the capacity which is a derivative of $\log Z$. However, we want the capacity for the average distance of manifolds, hence some replica trick will come in.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

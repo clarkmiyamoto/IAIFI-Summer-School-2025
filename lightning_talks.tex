@@ -20,6 +20,52 @@ The pipeline is super engineered (but probably more robust!), he makes a decisio
 Model is open-source / open-weight on \url{https://www.github.com/uiucsn/Astro-ORACLE}
 
 
+\section{Andr\'e Fonseca: Ground state search as an optimization problem}
+Does neural quantum states for many body system. Interested in inspecting the phase (statistical physics phase).
+
+\section{Karla Narvaez: Improving Neutrino Oscillation Measurements}
+In neutrino experiments, the interaction is a lot more complex than what is known theoretically. Hence they want to train a classifier on a simulator, and then apply it to the actual experiment.
+
+\section{Saraswati Pandey: QCD First Inverse Problem Using MLE}
+Inverse problems in QCD: attempt to extract theory parameters from experiments. She does traditional bayesian inference to estimate interesting parameters in her Lagrangian.
+
+\section{Matteo Santoro: Cartan Networks / Hyperbolic Deep Learning}
+Consider placing your data in a different geometry $x \in \mathcal M$. This was first explored in "Poincare Embeddings for Learning Hierarchical Representations" (2017), where researchers found that you need less dimensions if you embed the data in a hyperbolic manifold. He is now looking at using something related to the isometry group of CFTs (AdS/CFT stuff) to embed things... (I don't know enough to follow lol, but sounds cool)
+
+\section{Rigan Biroli: Control of Monitored Open Quantum System}
+Consider an open-systems view of quantum mechanics (Linbladian). You can write this as a stochastic differential equation, this is your state equation. The goal is to find a control Hamiltonian $H_c(t)$ (which is just added to the system Hamiltonian) which alters your trajectory in the desired way. 
+
+There are two tasks that he's focused on
+\begin{itemize}
+	\item Robust Control via Maximum Caliber: maximum caliber is the KL divergence between paths. 
+	\item Closed loop feedback control
+\end{itemize}
+
+\section{Sachin Venkatesh: PINNs and Black Hole Acceleration}
+Wants to simulate dynamics of gas (or other things) around a black hole. There's a high range of scale separation, so traditional numerical methods won't capture all the intersesting physics. So he's been attempting to use PINNs, Diffusion, etc. to emulate the PDE evolution.
+
+\section{Mauricio Bandera: Quantum Computation and Tensor Networks}
+He implements quantum machine learning algorithms using tensor networks.
+
+
+\section{Pawan Prakash: Diffusion Models for Material Discovery}
+Is working diffusion for material discovery. He is doing DDPM, but the internal layers are a graph neural network, allowing for interesting symmetries in the material. He creates a base model on materials, fine tunes it on superconducting materials, and then uses classifier-free guidance to condition on temperature. He then runs this materials through physics simulations, and is able to rule out non-physical materials. WOW, very nice work flow!
+
+\section{Jieliang Yin: LLM Based Multi Agent Reinforcement Learning}
+
+\section{Katie Keegan: Modified Noising for Diffusion Models on Manifold Supported Distributions}
+Consider data lying on some manifold $x \in \mathcal M$. What's funny is data (typically) lies on a set of measure zero, so you shouldn't be able to sample this distribution; so Katie is trying to create sampling algorithms which actually respect this.
+
+
+
+
+
+
+
+
+
+
+
 
 
 

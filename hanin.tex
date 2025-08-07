@@ -1,0 +1,59 @@
+TLDR: Uses dynamical mean field theory to more efficiently train large transformers.
+
+\section{Neural Network Scaling}
+It's trivial to assume that a bigger model will more likely find the correct answer to your research question, however at the end of the day you're limited by compute. So the question becomes "How to best utilize fixed compute budget?" Hanin proposes to use neural scaling laws to train bigger models in a smart way (i.e. compute vs validation loss follows a power law.).
+
+So here's the setting. You're given data, network w/ parameters $W_{ij}^{(\ell)}$, compute budget. Goal: Find near optimal hyper-parameters (i.e. initialization of the weights, learning rates, etc.) Obviously grid search is not feasible at large scale. If you define the hyper parameters intensive, perhaps they're well defined in the large parameter limit?
+
+If you're heard of `$\mu P`$, Hanin is basically claiming that his theory out-performs it.
+
+\subsection{Heuristics for Good Parameterization}
+Let $z^{(\ell)}$ be the representation at layer $\ell$. 
+\begin{enumerate}
+	\item Make sure that $||z^{(\ell)}||^2 = \mathcal O (\text{width})$
+	\item Consider two inputs $x,x'$. You'd want $\langle z^{(\ell)}(x) / ||z^{(\ell)}(x)|| ,  z^{(\ell)}(x') / ||z^{(\ell)}(x')|| \rangle$ to not be 0 nor 1. This means you want the representations to be be some-what overlapped
+	\item You want changes in representations to be order 1. 
+	\begin{align}
+		|| \Delta_{\theta}z^{(\ell)}||^2 = \mathcal O \left( ||z^{(\ell)}||^2 \cdot \frac{\text{len}(\theta)}{| \text{params}^{\leq \ell}|} \right)
+	\end{align}
+	\item Consider a taylor expansion of $z = z_{lin} + z_{non-lin}$. Basically, you'd hope that the non-linear part of your model gets most of the gradient update.
+	\begin{align}
+		\Delta_{\theta} z^{(\ell)} - \Delta_{\theta} z_{\theta, lin}^{(\ell)} = \mathcal O(\Delta_{\theta} z^{(\ell)})
+	\end{align}
+\end{enumerate}
+\subsection{Worked Example:}
+Consider a nerual network
+\begin{align}
+	f_\theta(x) = \sum_i s_2 W_i^{(2)} \sigma(s_1 W_i^{(1)} \cdot x) , ~ x \in \mathbb R^{N_0}
+\end{align}
+which is optimized by $\theta_{t+1} = \theta_t - \eta \nabla \mathcal L (\theta_t)$. Where the weights are initalized $\mathcal N(0,1)$. Now the question is, what are $s_1,s_2,\eta$?
+
+To fix the $s$'s. Consider an input $x = (x_i)_{i}$ s.t. $x_i \sim \mathcal O(1)$. We want $s_1 W_i^{(1)} \cdot x \sim \mathcal O(1)$, this implies that $s_\ell^2 \sim \mathcal O(N^{-1}_{\ell-1})$. This is called fan-in initialization. 
+
+Now let's set $\eta$. We want $\Delta f_{\theta_t}(x) = f_{\theta_{t+1}} - f_{\theta_t}(x) \sim \mathcal O(1)$. So lets compute
+\begin{align}
+	\Delta f_{\theta_t}(x) = \sum_j \partial_{\theta_j} f \cdot \Delta \theta_{j,t} = \mathbb E [ \mathcal L'_\alpha \cdot \eta \langle \nabla_\theta f_\theta(x), \nabla_\theta f_\theta(x_\alpha)\rangle]
+\end{align}
+But notice that $\langle \nabla_\theta f_\theta(x), \nabla_\theta f_\theta(x_\alpha)\rangle = N_1^{-1} \sum_{i=1}^{N_1} \mathcal O(1)$. So you'd think you'd be done, but this is very wrong.
+
+Let's finally set the first hidden layer to be order 1. So mathematically we want $\Delta_t z_i^{(1)}(x) = z_i^{(1)} (x; \theta_{t+1}) - z_i^{(1)}(x; \theta_t) \sim \mathcal O(1)$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
