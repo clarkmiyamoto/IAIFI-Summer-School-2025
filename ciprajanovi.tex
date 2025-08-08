@@ -1,1 +1,97 @@
-hi
+What if you had some real data, and wanted to make a classifier, but the real data does not come with classes. Suddenly, you get the idea to train the classifier on a simulator. So you go do that, find good test performance on the simulated data, and then apply it to the real data and it performs super bad. This is because the real data is a perturbation away from the simulated data. This is called \textbf{domain shift}.
+
+\section{Domain Shift Problem}
+Consider a source domain (i.e. simulator) $\mathcal D_S = \{(x_i^S , y_i^S)\}_{i}$ which is sampled from $p_S(x,y)$. And also consider data from a target domain (i.e. real data) $\mathcal D_T = \{x_i^T\}_i$ which is sampled from $p_T(x)$, which is marginalized from $p_T(x,y)$. Note that $p_T(x,y) \neq p_S(x,y)$. This can lead to various outcomes
+\begin{definition}
+	[Domain Shifts] There are various realizations of (simple) domain shifts, let's categorize them
+	\begin{itemize}
+		\item Label Shift: This is when $p_S(y) \neq p_T(y)$ but $p_T(y|x) = p_S(y|x)$
+		\item Concept Shift: $p_S(x) = p_T(x)$ but $p_S(y|x) \neq p_T(y | x)$
+		\item Conditional Shift: $p_S(y) = p_T(y)$ but $p_S(x|y) \neq p_T(x|y)$
+		\item Covariate Shift: $p_S(x) \neq p_T(x)$ but $p_S(y|x) = p_T(y|x)$
+	\end{itemize}
+\end{definition}
+You can also have a \textbf{compound shift}, where multiple domain shifts occur.
+
+\begin{sidework}
+	Examples:
+	\begin{itemize}
+	\item You have a model to detect a rare disease with low prevalence rate, it's now deployed in a different area with high prevalence rate. You don't change the data you collect. This is label shift.
+	\item You have a spam classifier which is trained on english, but you to deploy it on french. The spam to non spam ratio is about the same, but spam emails tend to have similar structure (i.e. lots of links). This is covariate shift.
+	\item Your credit risk model was trained 5 years old. Now due to economic changes, people with low income are more likely to default. Income distribution has not changed. This is concept.
+	\item You train a model on a balanced dataset of merging and non merging galaxies. At test time, your realistic catalog contains 90\% of non merging galaxies and remaining 10\% are same. This is label.
+	\item A remote sensing model is trained to classify crop types (i.e. wheat corn etc.) using satellite imagery in region A. Later the model is in region B but the soil composition, weather, sunlight is different affecting how the images change. This is covariate.
+\end{itemize}
+\end{sidework}
+
+\subsection{Implementation: Covariate Shift on Unlabeled Data}
+The solution idea, align the data distributions in the latent space by forcing the network to find more robust domain invariant features
+\begin{itemize}
+	\item \emph{Adversarial}: Make the model $f: \text{Input} \to \text{Classes} \times \text{Domain}$. So the model should actually be able to discern the domain. The unlabeled data will only accumulate gradients on the Domain.
+	
+	
+
+	\item \emph{Distance based methods}: 	 Consider a distance metric on distributions (i.e. Fisher, KL, etc.)
+	\item Reconstruction Based Methods: Another way is to make a neural network $f: \text{Input} \to \text{Latent}$ And then at the latent it splits into a classifier and a reconstructor. This forces the latent representations to be robust.
+\end{itemize} 
+
+\subsection{How do we visualize what DA is doing?}
+How can we go from a $N$ dimensional latent embedding space, i.e. go from $d$-dimensional to 2-dim /3-dim.
+
+There are (1) tSNE which is is like point-wise clumping, (2) Isomap reconstructs the geometric behavior of the data (so it doesn't just do closeness in euclidean metric), and (3) Umap (it's an inbetween of the two)
+
+
+\section{Distance Based Methods}
+\subsection{Maximum Mean Discrepancy (MMD)}
+Consider the RBF Kernel $k(x,y) = \exp( - ||x-y||^2 / 2\sigma^2)$. The MMD distance is determined by
+\begin{align}
+	\text{MMD}^2(\alpha, \beta) = \mathbb E_{x,x' \sim \alpha} [k (x,x')] + \mathbb E_{y,y' \sim \beta} [k(y,y')] - 2 \underbrace{\mathbb E_{x \sim \alpha, y \sim \beta}[k(x,y)]}_{\text{cross correlation}}
+\end{align}
+If you attempt to lower this, you're maximizing the cross-correlation between the two distributions.
+
+
+\subsection{Optimal Transport}
+The OT loss is
+\begin{align}
+	\text{OT}(\alpha,\beta) = \inf_\gamma \int c(x,y) d\gamma(x,y)
+\end{align}
+\begin{align}
+	W_p(\alpha,\beta) = \left(\inf_\gamma \int ||x-y||^p d\gamma(x,y) \right)^{1/p}
+\end{align}
+when $p=2$ this is Wasserstein distance. The cost to solve OT exactly scales $\mathcal O(n^3 \log n)$, where $n$ is the. But we can make this easier by adding \textbf{entropy regularization}
+\begin{align}
+	\text{OT}_{\epsilon, p}(\alpha,\beta) = \left(\inf_\gamma \int ||x-y||^p d\gamma(x,y) \right)^{1/p} - \epsilon \int \log \frac{d\gamma}{dx dy} d\gamma(x,y)
+\end{align}
+And to make it even easier to converge, we choose the \textbf{sink} loss
+\begin{align}
+	\text{Sink}(\alpha, \beta) = \text{OT}_\epsilon(\alpha, \beta) - \frac{1}{2} [\text{OT}_\epsilon (\alpha, \alpha) + \text{OT}_\epsilon (\beta,\beta)]
+\end{align}
+Self distnace of source and target should be zero in classical OT, but not in entropic OT.
+
+Note that sink recovers Wasserstein when $\epsilon \to 0$, and MMD when $\epsilon \to \infty$
+
+\section{Open Questions}
+\begin{itemize}
+	\item Unsupervised and few-shot domain adapation. What happens if your source dataset only has few labels?
+	\item Test-time adaptation \& source-free domain adaptation. Can you get your model to adapt on the fly during inference using only target dataset?
+	\item Multisource and multitarget domain adaptation. What happens if you have multiple source/target domains?
+	\item OOD Generalization. 
+	\item Domain adaptation for regression.
+	\item Vision-Language Models \& Multimodal DA. How do you adapt multimodal representations to new domains.
+	\item Continual adaptation. Can you adapt to a sequence of domains without forgetting past ones? 
+	\item 
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

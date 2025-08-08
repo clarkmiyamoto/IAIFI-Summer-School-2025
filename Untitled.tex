@@ -1,0 +1,142 @@
+%%% Document Formatting
+\documentclass[12pt,fleqn]{article}
+\usepackage[a4paper,
+            bindingoffset=0.2in,
+            left=0.75in,
+            right=0.75in,
+            top=0.8in,
+            bottom=0.8in,
+            footskip=.25in]{geometry}
+\setlength\parindent{10pt} % No indent
+
+%%% Imports
+% Mathematics
+\usepackage{amsmath} % Math formatting
+\numberwithin{equation}{section} % Number equation per section
+\DeclareMathOperator{\Tr}{Tr}
+
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proof}{Proof}
+\newtheorem{lemma}{Lemma}
+\newtheorem{example}{Example}
+
+\usepackage{amsmath}
+\usepackage{amsfonts} % Math fonts
+\usepackage{amssymb} % Math symbols
+\usepackage{mathtools} % Math etc.
+\usepackage{slashed} % Dirac slash notation
+\usepackage{cancel} % Cancels to zero
+\usepackage{empheq}
+\usepackage{breqn}
+
+\newcommand{\expect}[1]{\mathbb{E}\left[#1\right]}
+
+
+% Visualization
+\usepackage{graphicx} % for including images
+\graphicspath{ {} } % Path to graphics folder
+\usepackage{tikz}
+
+
+
+%%% Formating
+\usepackage{hyperref} % Hyperlinks
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+    }
+\urlstyle{same}
+
+\usepackage{mdframed} % Framed Enviroments
+\newmdenv[ 
+  topline=false,
+  bottomline=false,
+  skipabove=\topsep,
+  skipbelow=\topsep
+]{sidework} %% Side-work
+
+\usepackage{lipsum} % Lorem Ipsum example text
+
+%%%%% ------------------ %%%%%
+%%% Title
+\title{Some Notes on Diffusion}
+\author{Clark Miyamoto (cm6627@nyu.edu)}
+\date{Date}
+\begin{document}
+
+\maketitle
+
+\section{Fine Tuning Flow and Diffusion Models using Adjoint Method}
+Consider the stochastic optimal control (SOC) formulation,
+\begin{align}
+	min_u \mathbb E [ \frac{1}{2} \int_0^1 || u(X_t^u, t)^2 dt - r(X_1^u) \label{eqn:SOC}\\
+	\text{s.t.} dX_t^u = (b(X_t^u, t) + \sigma(t) u(X_t^u, t)) dt + \sigma(t) dB_t
+\end{align}
+Note that $\sigma(t)$ must be memoryless to work. Traditionally, people parameterize $u$ with a neural network $u_\theta$. And then Monte Carlo sample (\ref{eqn:SOC})
+\\
+\\
+How do we solve the SOC problem? Use \textbf{adjoint matching}.
+\begin{itemize}
+	\item Sample trajectories $\mathcal D_X = \{X_t^{(\nu)}\}_{t\geq 1, \nu}$ according to SDE: $dX_t^u = (b(X_t^u, t) + \sigma(t) u(X_t^u, t)) dt + \sigma(t) dB_t$
+	\item For each trajectory, compute
+	\begin{align}
+		\mathcal L_{Adj-Matching}(u_\theta; \mathcal D_X) \equiv \frac{1}{2} \int_0^1 || u_\theta(X_t, t) + \sigma(t) \tilde a(t; \mathcal D_X)||^2 dt
+	\end{align}
+	where $\tilde a$ is the solution to the Lean Adjoint ODE
+	\begin{align}
+		\frac{d}{dt} \tilde a(t; \mathcal D_X) = - \nabla_x b(X_t, t)^T \tilde a(t; \mathcal D_X), ~~~ \tilde a (1; \mathcal D_X) = - \nabla_x r(X_1)
+	\end{align}
+	\item Compute $\nabla_\theta \mathcal L_{Adj-Matching} (u_\theta; \mathcal D_X)$, and update using Adam.
+\end{itemize}
+
+
+\section{Your Diffusion Model is Secretly a Zero-Shot Classifier}
+Consider a probabilistic model $p_\theta(x | c)$, where $x$ are images, and $c$ are classes / labels. Querying this would generate images, given a certain class! By Bayes' theorem, we can construct $p(c | x) \propto p(x | c) p(c)$, which is interpreted as the probability of the image being class $c$. So in that sense, this idea is quite well motivated.
+\subsection{DDPM}
+Here we show how to implement this for DDPM architecture. Consider a clean sample $x_0$, a forward-process (adding noise) $q(x_t | x_{t-1})$, and a reverse-process (denoising oracle) $p_\theta(x_{t-1} | x_t , c)$. The diffusion model is defined as
+\begin{align}
+	p_\theta(x_0 | c) = \int p(x_T) \prod_{t=1}^T \left( p_\theta(x_{t-1} | x_t, c) dx_{t} \right)
+\end{align} 
+where $p(x_T)$ is typically $\mathcal N(0,\mathbb I)$. We train this using variational lower bound (ELBO). 
+\begin{align}
+	\log p_\theta(x_0 | c) \leq \mathbb E_q \left[ \log \frac{p_\theta(x_{0:T}, c)}{q(x_{1:T } | x_0)} \right] \approxeq  - \mathbb E_{t, \epsilon} [ || \epsilon - \epsilon_\theta(x_t, c)||^2]+ C
+\end{align}
+Now, recall Bayes' theorem
+\begin{align}
+	p_\theta(c | x) = \frac{p(c) p_\theta(x | c)}{\sum_{\{c\}} p(c) p_\theta(x |c)}
+\end{align}
+Let's choose the prior $p(c)$ to be uniform and make things simple. Now if we trained the diffusion model to be very good, then $\log p_\theta(x_0 | c) \approx - \mathbb E_{t, \epsilon}[||\epsilon - \epsilon_\theta(x_t, c)||^2] + C$ (it should saturate ELBO). Let's plug this into our posterior.
+\begin{align}
+	p_\theta(c|x) = \frac{\exp(- - \mathbb E_{t, \epsilon}[||\epsilon - \epsilon_\theta(x_t, c)||^2])}{\sum_{\{c\}} \exp(- \mathbb E_{t, \epsilon}[||\epsilon - \epsilon_\theta(x_t, c)||^2])}
+\end{align}
+
+\subsection{SBD}
+A natural follow up is, can we do this with Score-Based-Diffusion models. Zimmermann et al. considered this setup in \url{https://arxiv.org/pdf/2110.00473}. 
+
+We know that
+\begin{align}
+	\log p_0(x_0 | c) & = \log p_T(x_T | c)  + \int_0^T \nabla_x \cdot \tilde f_\theta(x,t |c) ~dt\\
+	& = \log p_T \left(x_0 + \int_0^T \tilde f_\theta(x_t, t | c) dt \right)  + \int_0^T \nabla \cdot \tilde f_\theta(x_t, t | c) dt
+\end{align}
+where $\tilde f_\theta(x,t | c) = f(x,t) + \frac{1}{2} g(t)^2 s_\theta(x,t| c)$. Where $f,g$ are the drift/diffusion coefficients.
+
+Now you can treat $p_0(x_0 | c)$ as a likelihood, and ask what $c$ maximizes it! And of-course, you can ask a Bayesian question if you like.
+
+\section{Generator Matching}
+Your objective is to transfer samples $X_0 \sim p$ (base distribution) to samples $X_1 \sim q$ (target distribution). The based + target can be related by a lifted measure $\pi = \pi(p,q)$.
+
+
+
+
+
+
+
+
+
+\end{document}
